@@ -20,7 +20,9 @@ jobs:
         run: bash .github/scripts/run-memblock-tests.sh
 
       - name: Run VMA tests
+        if: always()
         run: bash .github/scripts/run-vma-tests.sh
 
       - name: Run data structure tests
+        if: always()
         run: bash .github/scripts/run-datastructure-tests.sh
