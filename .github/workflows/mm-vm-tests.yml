@@ -1,8 +1,8 @@
 name: MM VM Tests
 
 on:
-  push:
-    branches: ['**']
+  # push:
+  #  branches: ['**']
   pull_request:
     branches: ['**']
   workflow_dispatch:
