@@ -13,5 +13,5 @@ $test_dir/main -v >$log 2>&1 || fail "memblock tests failed"
 
 # memblock tests use assert() which will abort on failure
 # If we reach here, all tests passed
-echo "✓ All memblock tests passed"
+echo "✓ memblock tests passed"
 exit 0

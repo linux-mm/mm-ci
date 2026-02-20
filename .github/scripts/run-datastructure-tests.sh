@@ -21,9 +21,9 @@ for test in "${!TESTS[@]}"; do
     test_name="${TESTS[$test]}"
     echo "Running $test_name tests"
     if ! $test_dir/$test > $log 2>&1; then
-        echo "✗ $test_name tests failed"
         cat $log
         failed+=("$test_name")
+        echo "✗ $test_name tests failed"
     else
         echo "✓ $test_name tests passed"
     fi
