@@ -1,15 +1,15 @@
-name: MM Host Tests
+name: mm-ci
 
 on:
-  #  push:
-  #  branches: ['**']
-  # pull_request:
-  #  branches: ['**']
+  pull_request:
+  push:
+    branches:
+      - mm-new
+      - mm-unstable
   workflow_dispatch:
 
 jobs:
   host-tests:
-    name: Run MM host tests
     runs-on: self-hosted
 
     steps:
@@ -26,3 +26,13 @@ jobs:
       - name: Run data structure tests
         if: always()
         run: bash .github/scripts/run-datastructure-tests.sh
+
+  vm-tests:
+    runs-on: self-hosted
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: Run VM tests
+        run: bash .github/scripts/run-vm-tests.sh
