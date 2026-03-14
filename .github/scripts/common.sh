@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Kselftest framework requirement - SKIP code is 4.
+ksft_skip=4
+
 test_script=$(basename $(realpath $0))
 linux_dir=$(dirname $(realpath $0))"/../.."
 

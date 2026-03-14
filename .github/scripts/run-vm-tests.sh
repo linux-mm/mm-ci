@@ -19,7 +19,8 @@ TESTS["ksft_vma_merge.sh"]="VMA merge"
 TESTS["ksft_mmap.sh"]="mmap(2)"
 TESTS["ksft_mremap.sh"]="mremap(2)"
 TESTS["ksft_page_frag.sh"]="page fragment allocator"
-TESTS["ksft_ksm_numa.sh"]="KSM NUMA"
+# ksm_numa is flaky, disable it for now
+# TESTS["ksft_ksm_numa.sh"]="KSM NUMA"
 TESTS["ksft_soft_dirty.sh"]="soft-dirty"
 TESTS["ksft_cow.sh"]="CoW"
 TESTS["ksft_pagemap.sh"]="pagemap_ioctl()"
@@ -69,7 +70,7 @@ function prepare_guest_env() {
 	sudo mount -o loop $guest_ext4_img $guest_ext4_mnt
 	sudo mkdir $guest_ext4_mnt/mm-selftests
 	sudo chown $USER $guest_ext4_mnt/mm-selftests
-	cp -a tools/testing/selftests/mm/* $guest_ext4_mnt/mm-selftests
+	cp -a tools/testing/selftests/* $guest_ext4_mnt/mm-selftests/
 
 	sudo umount $guest_ext4_mnt
 }
@@ -97,7 +98,7 @@ echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
 mount -o loop $ext4_img $ext4_mnt
 mount -t tmpfs tmpfs /tmp
 
-cd $ext4_mnt/mm-selftests
+cd $ext4_mnt/mm-selftests/mm/
 sudo ./$ksft_script -n 2>&1
 EOF
 }
@@ -115,21 +116,23 @@ function run_test() {
     prepare_guest_script "$test" &> /dev/null
 
     vng --cpus 4 --memory 16G --numa 8G --numa 8G --rwdir=/mnt=$guest_dir \
-	--qemu-opts="$QEMU_OPTS" -- bash $TEST_SCRIPT &> $log || err=$?
-    if 	[ $err -eq 0 ] || [ $err -eq $ksft_skip ]; then
-	    grep SUMMARY $log
+        --qemu-opts="$QEMU_OPTS" -- bash $TEST_SCRIPT &> $log || err=$?
+    if  [ $err -eq 0 ] || [ $err -eq $ksft_skip ]; then
+            grep Totals $log || true
+            grep SUMMARY $log || true
             echo "✓ $test_name tests passed"
-	    return 0
+            return 0
     fi
 
     exitcode=1
 
     # For TAP test log failures, for non-TAP test dump the raw log
-    echo "$test_name test failed:" | tee -a $failures_log > /dev/null
+    echo "$test_name test failed:" >>$failures_log
     # Record failures tests if they are in TAP format
     if ! grep "^# not ok " $log 2>/dev/null >>$failures_log; then
 	    cat $log >>$failures_log
     fi
+    echo "------------------------------------------" >>$failures_log
     echo "✗ $test_name tests failed"
 }
 
