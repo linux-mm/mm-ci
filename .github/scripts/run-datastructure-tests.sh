@@ -6,7 +6,7 @@ source "$(dirname "$0")/common.sh"
 test_dir=$linux_dir/tools/testing/radix-tree
 
 echo "Building data structure tests..."
-make -C $test_dir -s 2>&1 > $log || fail "Build of data structure tests failed"
+make -C $test_dir -s &> $log || fail "Build of data structure tests failed"
 
 declare -A TESTS
 TESTS["main"]="Radix tree and IDA"
@@ -20,7 +20,7 @@ failed=()
 for test in "${!TESTS[@]}"; do
     test_name="${TESTS[$test]}"
     echo "Running $test_name tests"
-    if ! $test_dir/$test > $log 2>&1; then
+    if ! $test_dir/$test &> $log; then
         cat $log
         failed+=("$test_name")
         echo "✗ $test_name tests failed"
