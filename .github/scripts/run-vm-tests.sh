@@ -142,6 +142,7 @@ vng -v --build --config "$KCONFIG_FRAGMENT" > $log 2>&1 || \
 	fail "Kernel build failed"
 
 echo "Building MM selftests..."
+make headers_install > $log 2>&1 || fail "headers_install failed"
 make -C tools/testing/selftests/mm > $log 2>&1 || fail "Selftests build failed"
 
 echo "Preparing guest test environment"
