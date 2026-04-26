@@ -1,0 +1,6 @@
+[Unit]
+Description=Clean up stale workflow runs and pull requests for linux-mm
+
+[Service]
+Type=oneshot
+ExecStart=%h/git/mm-ci/scripts/cleanup.sh
