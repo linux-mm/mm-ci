@@ -137,9 +137,11 @@ function run_test() {
 }
 
 echo "Building kernel with MM selftests configuration..."
-KCONFIG_FRAGMENT=".github/kconfigs/mm-selftests.config"
-vng -v --build --config "$KCONFIG_FRAGMENT" > $log 2>&1 || \
-	fail "Kernel build failed"
+KCONFIG_OPTS=(
+	--config "$linux_dir/.github/kconfigs/mm-selftests.config"
+	--config "$linux_dir/tools/testing/selftests/mm/config"
+)
+vng -v --build "${KCONFIG_OPTS[@]}" &> $log || fail "Kernel build failed"
 
 echo "Building MM selftests..."
 make headers_install > $log 2>&1 || fail "headers_install failed"
