@@ -46,8 +46,8 @@ jobs:
         run: bash .github/scripts/run-datastructure-tests.sh
 
   vm-tests:
+    runs-on: self-hosted
     name: VM tests
-    runs-on: [self-hosted, azure]
 
     steps:
       - name: checkout repository
