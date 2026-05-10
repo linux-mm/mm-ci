@@ -2,6 +2,27 @@ all:
   children:
     runners:
       hosts:
+        nic0.mm-ci-ubuntu-1.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
+          ansible_user: jackmanb_google_com
+          runner_labels: "gcp,ubuntu"
         nic0.mm-ci-ubuntu-2.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
+          ansible_user: jackmanb_google_com
+          runner_labels: "gcp,ubuntu"
+        nic0.mm-ci-ubuntu-3.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
+          ansible_user: jackmanb_google_com
+          runner_labels: "gcp,ubuntu"
+        nic0.mm-ci-ubuntu-4.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
+          ansible_user: jackmanb_google_com
+          runner_labels: "gcp,ubuntu"
+        nic0.mm-ci-ubuntu-5.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
+          ansible_user: jackmanb_google_com
+          runner_labels: "gcp,ubuntu"
+        nic0.mm-ci-ubuntu-6.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
+          ansible_user: jackmanb_google_com
+          runner_labels: "gcp,ubuntu"
+        nic0.mm-ci-ubuntu-7.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
+          ansible_user: jackmanb_google_com
+          runner_labels: "gcp,ubuntu"
+        nic0.mm-ci-ubuntu-8.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
           ansible_user: jackmanb_google_com
           runner_labels: "gcp,ubuntu"
