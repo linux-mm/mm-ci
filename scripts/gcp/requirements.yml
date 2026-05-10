@@ -1,0 +1,3 @@
+---
+roles:
+  - name: MonolithProjects.github_actions_runner

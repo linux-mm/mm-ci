@@ -1,0 +1,7 @@
+all:
+  children:
+    runners:
+      hosts:
+        nic0.mm-ci-ubuntu-2.europe-west4-a.c.kernel-metal-testing.internal.gcpnode.com:
+          ansible_user: jackmanb_google_com
+          runner_labels: "gcp,ubuntu"
