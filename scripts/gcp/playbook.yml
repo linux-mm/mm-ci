@@ -1,0 +1,82 @@
+---
+- name: Setup CI Environment and Install GitHub Actions Runner
+  hosts: runners
+  become: yes
+  vars_files:
+    - secrets.yml
+  vars:
+    # We will use the role's default logic for user/dir or set explicitly
+    runner_user: "runner"
+    runner_dir: "/home/{{ runner_user }}/actions-runner"
+
+    # Values required by the MonolithProjects.github_actions_runner role
+    github_account: "linux-mm"
+    github_repo: "linux-mm"
+    access_token: "{{ github_token }}"
+    reinstall_runner: true
+    runner_version: "2.316.1"
+
+    # Process the comma-separated labels into a list for the role
+    runner_labels: "{{ (hostvars[inventory_hostname].runner_labels | default('')).split(',') | reject('equalto', '') | list }}"
+
+  pre_tasks:
+    - name: Create runner user
+      user:
+        name: "{{ runner_user }}"
+        shell: /bin/bash
+        home: "/home/{{ runner_user }}"
+        groups: kvm
+        append: yes
+
+    - name: Allow runner user to execute any command with sudo without password
+      copy:
+        dest: "/etc/sudoers.d/runner-vm-tests"
+        content: |
+          {{ runner_user }} ALL=(ALL) NOPASSWD: ALL
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+    - name: Install dependencies
+      apt:
+        name:
+          - curl
+          - tar
+          - libicu-dev
+          - git
+          - acl
+          - build-essential
+          - liburcu-dev
+          - libelf-dev
+          - bc
+          - libssl-dev
+          - pipx
+          - libcap-dev
+          - libnuma-dev
+          - binutils
+          - qemu-utils
+          - qemu-system-x86
+          - qemu-system-common
+          - e2tools
+          - file
+          - dkms
+          - flex
+          - bison
+        state: present
+        update_cache: yes
+
+    - name: Install virtme-ng via pipx for runner user
+      command:
+        cmd: "pipx install virtme-ng"
+      become_user: "{{ runner_user }}"
+      args:
+        creates: "/home/{{ runner_user }}/.local/bin/virtme-ng"
+
+    - name: Add .local/bin to runner user PATH
+      lineinfile:
+        path: "/home/{{ runner_user }}/.bashrc"
+        line: 'export PATH="/home/{{ runner_user }}/.local/bin:${PATH}"'
+        state: present
+      become_user: "{{ runner_user }}"
+
+  roles:
+    - role: MonolithProjects.github_actions_runner
