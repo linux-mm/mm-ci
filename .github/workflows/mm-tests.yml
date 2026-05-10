@@ -14,6 +14,10 @@ concurrency:
 
 jobs:
   host-tests:
+    # Don't run in the mm-ci repository, since it doesn't actually have the
+    # kernel code.
+    if: github.repository == 'linux-mm/linux-mm'
+
     strategy:
       fail-fast: false
       matrix:
@@ -46,6 +50,10 @@ jobs:
         run: bash .github/scripts/run-datastructure-tests.sh
 
   vm-tests:
+    # Don't run in the mm-ci repository, since it doesn't actually have the
+    # kernel code.
+    if: github.repository == 'linux-mm/linux-mm'
+
     name: VM tests
     runs-on: [self-hosted, azure]
 
