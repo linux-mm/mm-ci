@@ -44,6 +44,7 @@ test_names=($(printf '%s\n' "${TESTS[@]}" | sort))
 cd $linux_dir
 
 guest_dir=$(mktemp -d -p $(pwd))
+chmod a+x $guest_dir
 guest_ext4_img=$guest_dir/ext4.img
 guest_ext4_mnt=$guest_dir/ext4_mnt
 guest_swap=$guest_dir/swap.qcow2
@@ -71,6 +72,7 @@ function prepare_guest_env() {
 	sudo mkdir $guest_ext4_mnt/mm-selftests
 	sudo chown $USER $guest_ext4_mnt/mm-selftests
 	cp -a tools/testing/selftests/* $guest_ext4_mnt/mm-selftests/
+	chmod -R a+rX $guest_ext4_mnt/mm-selftests
 
 	sudo umount $guest_ext4_mnt
 }
