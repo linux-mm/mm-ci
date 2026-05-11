@@ -64,19 +64,11 @@
         state: present
         update_cache: yes
 
-    - name: Install virtme-ng via pipx for runner user
+    - name: Install virtme-ng via pipx globally
       command:
-        cmd: "pipx install virtme-ng"
-      become_user: "{{ runner_user }}"
+        cmd: "pipx install --global virtme-ng"
       args:
-        creates: "/home/{{ runner_user }}/.local/bin/virtme-ng"
-
-    - name: Add .local/bin to runner user PATH
-      lineinfile:
-        path: "/home/{{ runner_user }}/.bashrc"
-        line: 'export PATH="/home/{{ runner_user }}/.local/bin:${PATH}"'
-        state: present
-      become_user: "{{ runner_user }}"
+        creates: "/usr/local/bin/virtme-ng"
 
   roles:
     - role: MonolithProjects.github_actions_runner
