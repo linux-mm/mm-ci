@@ -66,3 +66,7 @@ jobs:
 
       - name: Run MM selftests
         run: bash .github/scripts/run-mm-selftests.sh
+
+      - name: Run KUnit SLUB test
+        if: always() && steps.build.outcome == 'success'
+        run: bash .github/scripts/run-kunit-tests.sh
