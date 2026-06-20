@@ -60,5 +60,9 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v6
 
+      - name: Build kernel
+        id: build
+        run: bash .github/scripts/build-kernel.sh
+
       - name: Run MM selftests
         run: bash .github/scripts/run-mm-selftests.sh
