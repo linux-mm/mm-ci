@@ -60,5 +60,5 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v6
 
-      - name: Run VM tests
-        run: bash .github/scripts/run-vm-tests.sh
+      - name: Run MM selftests
+        run: bash .github/scripts/run-mm-selftests.sh
