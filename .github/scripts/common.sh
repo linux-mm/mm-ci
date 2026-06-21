@@ -22,3 +22,10 @@ function fail() {
 	echo "✗ $msg"
 	exit 1
 }
+
+function pass() {
+	local msg=${1:-"✗ Test passed"}
+
+	echo "✓ $msg"
+	exit 0
+}
