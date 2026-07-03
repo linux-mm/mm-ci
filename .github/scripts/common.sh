@@ -5,7 +5,7 @@ set -euo pipefail
 ksft_skip=4
 
 test_script=$(basename $(realpath $0))
-linux_dir=$(dirname $(realpath $0))"/../.."
+linux_dir=${LINUX_DIR:-$(dirname $(realpath $0))"/../.."}
 
 tmp_dir=$(mktemp -d)
 log=$tmp_dir/$test_script.log
