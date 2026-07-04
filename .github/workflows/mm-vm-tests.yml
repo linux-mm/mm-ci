@@ -9,6 +9,10 @@ on:
 
 jobs:
   vm-tests:
+    # Don't run in the mm-ci repository, since it doesn't actually have the
+    # kernel code.
+    if: github.repository == 'linux-mm/linux-mm'
+
     name: Run MM VM tests
     runs-on: self-hosted
 

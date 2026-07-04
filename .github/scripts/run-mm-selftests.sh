@@ -44,6 +44,7 @@ test_names=($(printf '%s\n' "${TESTS[@]}" | sort))
 cd $linux_dir
 
 guest_dir=$(mktemp -d -p $(pwd))
+chmod a+x $guest_dir
 guest_ext4_img=$guest_dir/ext4.img
 guest_ext4_mnt=$guest_dir/ext4_mnt
 guest_swap=$guest_dir/swap.qcow2
@@ -71,6 +72,7 @@ function prepare_guest_env() {
 	sudo mkdir $guest_ext4_mnt/mm-selftests
 	sudo chown $USER $guest_ext4_mnt/mm-selftests
 	cp -a tools/testing/selftests/* $guest_ext4_mnt/mm-selftests/
+	chmod -R a+rX $guest_ext4_mnt/mm-selftests
 
 	sudo umount $guest_ext4_mnt
 }
@@ -100,12 +102,39 @@ mount -t tmpfs tmpfs /tmp
 
 cd $ext4_mnt/mm-selftests/mm/
 sudo ./$ksft_script -n 2>&1
+
+# even if a test passed, dmesg may contain warnings
+dmesg
 EOF
 }
 
 TEST_SCRIPT="/mnt/run_vmtests.sh"
 QEMU_OPTS="-drive file=$guest_swap,if=virtio"
 KERNEL_OPTS="hugepagesz=2M hugepagesz=1G"
+
+check_kernel_log() {
+	local log_file=$1
+	local test_script=$2
+	local test_name=$3
+
+	# Tripwire ERE: any match means the kernel log contains something bad.
+	local bad_re='WARNING:|BUG|Oops|UBSAN:|rcu:.*stall|INFO: task .* blocked|watchdog:.*LOCKUP'
+	local ok_re='FAULT_INJECTION'
+
+	case "$test_script" in
+	ksft_memory_failure.sh)
+		ok_re="$ok_re|Memory failure:|MCE: Killing|Soft offline:|Unpoison:" ;;
+	esac
+
+	if grep -E -- "$bad_re" "$log_file" | grep -Eqv -- "$ok_re"; then
+		echo "$test_name: kernel log shows issues:" \
+			>> "$failures_log"
+		cat "$log_file" >> "$failures_log"
+		return 1
+	fi
+
+	return 0
+}
 
 function run_test() {
     local test=$1
@@ -117,7 +146,14 @@ function run_test() {
 
     vng --cpus 4 --memory 16G --numa 8G --numa 8G --rwdir=/mnt=$guest_dir \
         --qemu-opts="$QEMU_OPTS" -- bash $TEST_SCRIPT &> $log || err=$?
-    if  [ $err -eq 0 ] || [ $err -eq $ksft_skip ]; then
+
+    # we treat skipped tests as passed
+    [ $err -eq $ksft_skip ] && err=0
+
+    local kern_err=0
+    check_kernel_log "$log" "$test" "$test_name" || kern_err=1
+
+    if [ $err -eq 0 ] && [ $kern_err -eq 0 ]; then
             grep Totals $log || true
             grep SUMMARY $log || true
             echo "✓ $test_name tests passed"
@@ -126,20 +162,19 @@ function run_test() {
 
     exitcode=1
 
-    # For TAP test log failures, for non-TAP test dump the raw log
-    echo "$test_name test failed:" >>$failures_log
-    # Record failures tests if they are in TAP format
-    if ! grep "^# not ok " $log 2>/dev/null >>$failures_log; then
-	    cat $log >>$failures_log
+    if [ $err -ne 0 ]; then
+        # For TAP test log failures, for non-TAP test dump the raw log
+        echo "$test_name test failed:" >>$failures_log
+        # Record failures tests if they are in TAP format
+        if ! grep "^# not ok " $log 2>/dev/null >>$failures_log; then
+	        cat $log >>$failures_log
+        fi
+        echo "------------------------------------------" >>$failures_log
+        echo "✗ $test_name tests failed"
+    else
+        echo "✗ $test_name passed but kernel log shows issues"
     fi
-    echo "------------------------------------------" >>$failures_log
-    echo "✗ $test_name tests failed"
 }
-
-echo "Building kernel with MM selftests configuration..."
-KCONFIG_FRAGMENT=".github/kconfigs/mm-selftests.config"
-vng -v --build --config "$KCONFIG_FRAGMENT" > $log 2>&1 || \
-	fail "Kernel build failed"
 
 echo "Building MM selftests..."
 make headers_install > $log 2>&1 || fail "headers_install failed"
