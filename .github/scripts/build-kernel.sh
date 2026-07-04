@@ -9,7 +9,7 @@ echo "Building kernel with MM selftests configuration..."
 # Remove any stale .config so vng regenerates it from the fragments below
 rm -f $linux_dir/.config
 KCONFIG_OPTS=(
-	--config "$linux_dir/.github/kconfigs/mm-selftests.config"
+	--config "$mm_ci_dir/.github/kconfigs/mm-selftests.config"
 	--config "$linux_dir/tools/testing/selftests/mm/config"
 )
 vng --build "${KCONFIG_OPTS[@]}" &> $log.noisy && pass "Kernel build passed"
