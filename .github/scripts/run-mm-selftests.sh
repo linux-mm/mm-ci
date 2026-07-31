@@ -19,8 +19,7 @@ TESTS["ksft_vma_merge.sh"]="VMA merge"
 TESTS["ksft_mmap.sh"]="mmap(2)"
 TESTS["ksft_mremap.sh"]="mremap(2)"
 TESTS["ksft_page_frag.sh"]="page fragment allocator"
-# ksm_numa is flaky, disable it for now
-# TESTS["ksft_ksm_numa.sh"]="KSM NUMA"
+TESTS["ksft_ksm_numa.sh"]="KSM NUMA"
 TESTS["ksft_soft_dirty.sh"]="soft-dirty"
 TESTS["ksft_cow.sh"]="CoW"
 TESTS["ksft_pagemap.sh"]="pagemap_ioctl()"
@@ -37,6 +36,8 @@ TESTS["ksft_userfaultfd.sh"]="userfaultfd(2)"
 TESTS["ksft_hugetlb.sh"]="hugetlb"
 TESTS["ksft_hmm.sh"]="HMM"
 TESTS["ksft_vmalloc.sh"]="vmalloc"
+
+FLAKY_TESTS=("ksft_ksm_numa.sh" "ksft_ksm.sh")
 
 tests=($(printf '%s\n' "${!TESTS[@]}" | sort))
 test_names=($(printf '%s\n' "${TESTS[@]}" | sort))
@@ -157,6 +158,11 @@ function run_test() {
             grep Totals $log || true
             grep SUMMARY $log || true
             echo "✓ $test_name tests passed"
+            return 0
+    fi
+
+    if [[ " ${FLAKY_TESTS[*]} " == *" $test "* ]]; then
+            echo "? flaky $test_name test failed"
             return 0
     fi
 
