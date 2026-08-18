@@ -103,15 +103,21 @@ mount -t tmpfs tmpfs /tmp
 
 cd $ext4_mnt/mm-selftests/mm/
 sudo ./$ksft_script -n 2>&1
-
-# even if a test passed, dmesg may contain warnings
-dmesg
 EOF
 }
 
 TEST_SCRIPT="/mnt/run_vmtests.sh"
-QEMU_OPTS="-drive file=$guest_swap,if=virtio"
-KERNEL_OPTS="hugepagesz=2M hugepagesz=1G"
+
+console_log=$tmp_dir/console.log
+
+QEMU_OPTS="-drive file=$guest_swap,if=virtio -no-reboot"
+QEMU_OPTS+=" -device virtio-serial-pci,id=vcon"
+QEMU_OPTS+=" -device virtconsole,chardev=conlog,bus=vcon.0"
+QEMU_OPTS+=" -chardev file,id=conlog,path=$console_log"
+
+KERNEL_OPTS="console=hvc0 loglevel=8 panic=-1 oops=panic"
+
+TIMEOUT=${TIMEOUT:-300}
 
 check_kernel_log() {
 	local log_file=$1
@@ -128,7 +134,7 @@ check_kernel_log() {
 	esac
 
 	if grep -E -- "$bad_re" "$log_file" | grep -Eqv -- "$ok_re"; then
-		echo "$test_name: kernel log shows issues:" \
+		echo "✗ $test_name tests: kernel log shows issues:" \
 			>> "$failures_log"
 		cat "$log_file" >> "$failures_log"
 		return 1
@@ -145,14 +151,17 @@ function run_test() {
     echo "Running $test_name test"
     prepare_guest_script "$test" &> /dev/null
 
+    truncate -s 0 $console_log
+    timeout -k 1s ${TIMEOUT}s \
     vng --cpus 4 --memory 16G --numa 8G --numa 8G --rwdir=/mnt=$guest_dir \
-        --qemu-opts="$QEMU_OPTS" -- bash $TEST_SCRIPT &> $log || err=$?
+        --qemu-opts="$QEMU_OPTS" --append "$KERNEL_OPTS" \
+        -- bash $TEST_SCRIPT < /dev/null &> $log || err=$?
 
     # we treat skipped tests as passed
     [ $err -eq $ksft_skip ] && err=0
 
     local kern_err=0
-    check_kernel_log "$log" "$test" "$test_name" || kern_err=1
+    check_kernel_log "$console_log" "$test" "$test_name" || kern_err=1
 
     if [ $err -eq 0 ] && [ $kern_err -eq 0 ]; then
             grep Totals $log || true
@@ -168,18 +177,24 @@ function run_test() {
 
     exitcode=1
 
-    if [ $err -ne 0 ]; then
-        # For TAP test log failures, for non-TAP test dump the raw log
-        echo "$test_name test failed:" >>$failures_log
-        # Record failures tests if they are in TAP format
-        if ! grep "^# not ok " $log 2>/dev/null >>$failures_log; then
-	        cat $log >>$failures_log
-        fi
-        echo "------------------------------------------" >>$failures_log
-        echo "✗ $test_name tests failed"
+    if [ $err -eq 0 ]; then
+            echo "✗ $test_name tests passed but kernel log shows issues"
+    elif [ $err -eq 124 ] || [ $err -eq 137 ]; then
+            echo "✗ $test_name tests timed out"
     else
-        echo "✗ $test_name passed but kernel log shows issues"
+            echo "✗ $test_name tests failed"
     fi
+
+    # check_kernel_log() already recorded issues in the kernel log
+    # Log failures for TAP tests and dump the raw log otherwise
+    if [ $kern_err -eq 0 ]; then
+            echo "✗ $test_name test failed:" >>$failures_log
+            if ! grep "^# not ok " $log >>$failures_log; then
+		    cat $log >>$failures_log
+	    fi
+    fi
+
+    echo "------------------------------------------" >>$failures_log
 }
 
 echo "Building MM selftests..."
