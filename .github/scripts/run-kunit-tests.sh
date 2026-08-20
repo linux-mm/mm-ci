@@ -6,7 +6,8 @@ source "$(dirname "$0")/common.sh"
 cd $linux_dir
 
 echo "Running SLUB KUnit test"
-vng -- bash -c 'modprobe slub_kunit; dmesg' &> $log || fail "Failed to run test"
+vng --cpus 4 --memory 8G --numa 4G --numa 4G \
+    -- bash -c 'modprobe slub_kunit; dmesg' &> $log || fail "Failed to run test"
 
 if grep -qE 'not ok [0-9]+ slub_test\b' $log; then
 	fail "SLUB KUnit test failed"
