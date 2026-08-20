@@ -37,7 +37,7 @@ function parse_opts() {
     while true; do
 	case "$1" in
 	    -l | --linux-dir)
-		linux_dir=$2
+		linux_dir=$(realpath $2)
 		shift 2
 		;;
 	    -h | --help)
