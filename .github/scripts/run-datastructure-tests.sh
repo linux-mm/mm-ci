@@ -15,7 +15,7 @@ TESTS["multiorder"]="Multiorder XArray"
 TESTS["xarray"]="XArray"
 TESTS["maple"]="Maple tree"
 
-FLAKY_TESTS="maple"
+FLAKY_TESTS="maple main"
 
 failed=()
 
@@ -24,7 +24,7 @@ for test in "${!TESTS[@]}"; do
     echo "Running $test_name tests"
     if ! $test_dir/$test &> $log; then
         cat $log
-        if echo $FLAKY_TESTS | grep $test &>/dev/null; then
+        if echo "$FLAKY_TESTS" | grep -qwF -- "$test"; then
              echo "? flaky $test_name tests failed"
              continue
         fi
